@@ -1,6 +1,7 @@
 import feedparser
 import requests
 import datetime
+import os
 
 NOTION_TOKEN = os.environ["NOTION_TOKEN"]
 NOTION_DATABASE_ID = os.environ["NOTION_DATABASE_ID"]
