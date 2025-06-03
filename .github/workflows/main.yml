@@ -1,0 +1,17 @@
+name: Debug Notion Secrets
+
+on:
+  workflow_dispatch:  # allows you to run it manually via the GitHub UI
+
+jobs:
+  check_secrets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check if secrets are passed
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+        run: |
+          echo "Token length: ${#NOTION_TOKEN}"
+          echo "DB ID prefix: ${NOTION_DATABASE_ID:0:6}"
