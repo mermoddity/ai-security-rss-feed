@@ -15,7 +15,13 @@ headers = {
 def post_to_notion(entry, source_name):
     title = entry.get("title", "Untitled")
     url = entry.get("link", "")
-    date = entry.get("published", "") or datetime.datetime.utcnow().isoformat()
+
+    # Convert to ISO 8601 date
+    raw_date = entry.get("published", "")
+    try:
+        iso_date = parsedate_to_datetime(raw_date).isoformat()
+    except Exception:
+        iso_date = datetime.datetime.utcnow().isoformat()
 
     data = {
         "parent": {"database_id": NOTION_DATABASE_ID},
