@@ -2,6 +2,7 @@ import feedparser
 import requests
 import datetime
 import os
+from email.utils import parsedate_to_datetime
 
 NOTION_TOKEN = os.environ["NOTION_TOKEN"]
 NOTION_DATABASE_ID = os.environ["NOTION_DATABASE_ID"]
@@ -11,6 +12,51 @@ headers = {
     "Notion-Version": "2022-06-28",
     "Content-Type": "application/json"
 }
+
+def get_existing_entries():
+    """
+    Query the Notion database to get all existing entries.
+    Returns a set of URLs that are already in the database.
+    """
+    existing_urls = set()
+    has_more = True
+    start_cursor = None
+    
+    while has_more:
+        query_data = {
+            "database_id": NOTION_DATABASE_ID,
+            "filter": {
+                "property": "URL",
+                "url": {
+                    "is_not_empty": True
+                }
+            },
+            "page_size": 100  # Maximum allowed by Notion API
+        }
+        
+        if start_cursor:
+            query_data["start_cursor"] = start_cursor
+            
+        response = requests.post(
+            "https://api.notion.com/v1/databases/query",
+            headers=headers,
+            json=query_data
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            for page in result.get("results", []):
+                url = page.get("properties", {}).get("URL", {}).get("url", "")
+                if url:
+                    existing_urls.add(url)
+                    
+            has_more = result.get("has_more", False)
+            start_cursor = result.get("next_cursor")
+        else:
+            print(f"Error querying Notion database: {response.status_code}, {response.text}")
+            break
+    
+    return existing_urls
 
 def post_to_notion(entry, source_name):
     title = entry.get("title", "Untitled")
@@ -34,19 +80,46 @@ def post_to_notion(entry, source_name):
     }
 
     res = requests.post("https://api.notion.com/v1/pages", headers=headers, json=data)
-    print(source_name, res.status_code, res.text)
+    print(f"{source_name} - {title}: {res.status_code}")
 
-def fetch_rss_and_post(feed_url, source_name):
+def fetch_rss_and_post(feed_url, source_name, existing_urls):
+    """
+    Fetch RSS feed and post entries that don't already exist in the Notion database.
+    """
     feed = feedparser.parse(feed_url)
-    for entry in feed.entries[:5]:
-        post_to_notion(entry, source_name)
+    new_entries = 0
+    skipped_entries = 0
+    
+    for entry in feed.entries[:10]:  # Increased from 5 to 10 to get more content
+        url = entry.get("link", "")
+        if url and url not in existing_urls:
+            post_to_notion(entry, source_name)
+            existing_urls.add(url)  # Add to set to prevent duplicates within the same run
+            new_entries += 1
+        else:
+            skipped_entries += 1
+    
+    print(f"{source_name}: {new_entries} new entries added, {skipped_entries} duplicates skipped")
 
 if __name__ == "__main__":
-    fetch_rss_and_post("https://export.arxiv.org/api/query?search_query=all:llm+security&start=0&max_results=10&sortBy=lastUpdatedDate&sortOrder=descending", "Arxiv - LLM Security")
-    fetch_rss_and_post("https://feeds.feedburner.com/TheHackersNews", "The Hacker News")
-    fetch_rss_and_post("https://www.darkreading.com/rss.xml", "DarkReading")
-    fetch_rss_and_post("https://aisnakeoil.substack.com/feed", "AI Snake Oil")
-    fetch_rss_and_post("https://attack.mitre.org/rss/", "MITRE ATT&CK / ATLAS")
-    fetch_rss_and_post("https://openai.com/blog/rss.xml", "OpenAI Blog")
-    fetch_rss_and_post("https://www.anthropic.com/news/rss", "Anthropic News")
-    fetch_rss_and_post("https://www.deepmind.com/blog/rss.xml", "Google DeepMind")
+    # Get all existing entries once at the beginning
+    print("Fetching existing entries from Notion database...")
+    existing_urls = get_existing_entries()
+    print(f"Found {len(existing_urls)} existing entries")
+    
+    # List of RSS feeds to process
+    rss_feeds = [
+        ("https://export.arxiv.org/api/query?search_query=all:llm+security&start=0&max_results=10&sortBy=lastUpdatedDate&sortOrder=descending", "Arxiv - LLM Security"),
+        ("https://feeds.feedburner.com/TheHackersNews", "The Hacker News"),
+        ("https://www.darkreading.com/rss.xml", "DarkReading"),
+        ("https://www.aisnakeoil.com/feed", "AI Snake Oil"),
+        ("https://attack.mitre.org/rss/", "MITRE ATT&CK / ATLAS"),
+        ("https://openai.com/blog/rss.xml", "OpenAI Blog"),
+        ("https://rsshub.app/anthropic/news", "Anthropic News"),
+        ("https://www.deepmind.com/blog/rss.xml", "Google DeepMind")
+    ]
+    
+    # Process each feed
+    for feed_url, source_name in rss_feeds:
+        print(f"Processing {source_name}...")
+        fetch_rss_and_post(feed_url, source_name, existing_urls)
