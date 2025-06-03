@@ -2,8 +2,8 @@ import feedparser
 import requests
 import datetime
 
-NOTION_TOKEN = "secret_xxx"  # Replace with your actual Notion API token
-NOTION_DATABASE_ID = "your_database_id"  # Replace with your Notion database ID
+NOTION_TOKEN = os.environ["NOTION_TOKEN"]
+NOTION_DATABASE_ID = os.environ["NOTION_DATABASE_ID"]
 
 headers = {
     "Authorization": f"Bearer {NOTION_TOKEN}",
