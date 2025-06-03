@@ -29,7 +29,7 @@ def post_to_notion(entry, source_name):
             "Title": {"title": [{"text": {"content": title}}]},
             "URL": {"url": url},
             "Source": {"rich_text": [{"text": {"content": source_name}}]},
-            "Published Date": {"date": {"start": date}}
+            "Published Date": {"date": {"start": iso_date}}
         }
     }
 
