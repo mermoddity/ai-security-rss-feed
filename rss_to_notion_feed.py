@@ -75,8 +75,21 @@ def post_to_notion(entry, source_name):
     # Convert to ISO 8601 date
     raw_date = entry.get("published", "")
     try:
-        iso_date = parsedate_to_datetime(raw_date).isoformat()
-    except Exception:
+        # First try parsing as ISO 8601 format
+        if raw_date and ('T' in raw_date or '-' in raw_date):
+            # Handle ISO 8601 format directly
+            try:
+                # Try parsing with datetime directly
+                parsed_date = datetime.datetime.fromisoformat(raw_date.replace('Z', '+00:00'))
+                iso_date = parsed_date.isoformat()
+            except ValueError:
+                # If direct parsing fails, try with parsedate_to_datetime
+                iso_date = parsedate_to_datetime(raw_date).isoformat()
+        else:
+            # Use email parser for RFC 2822 format
+            iso_date = parsedate_to_datetime(raw_date).isoformat()
+    except Exception as e:
+        print(f"Date parsing error for '{raw_date}': {str(e)}")
         iso_date = datetime.datetime.utcnow().isoformat()
 
     data = {
