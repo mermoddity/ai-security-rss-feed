@@ -62,6 +62,15 @@ def get_existing_entries():
 def post_to_notion(entry, source_name):
     title = entry.get("title", "Untitled")
     url = entry.get("link", "")
+    
+    # Get summary content from the entry
+    summary = entry.get("summary", "")
+    # Some feeds use 'content' instead of 'summary'
+    if not summary and entry.get("content"):
+        summary = "".join(c.value for c in entry.get("content", []))
+    # Fallback to description if available
+    if not summary and entry.get("description"):
+        summary = entry.get("description")
 
     # Convert to ISO 8601 date
     raw_date = entry.get("published", "")
@@ -76,7 +85,8 @@ def post_to_notion(entry, source_name):
             "Title": {"title": [{"text": {"content": title}}]},
             "URL": {"url": url},
             "Source": {"rich_text": [{"text": {"content": source_name}}]},
-            "Published Date": {"date": {"start": iso_date}}
+            "Published Date": {"date": {"start": iso_date}},
+            "Summary": {"rich_text": [{"text": {"content": summary[:2000] if summary else ""}}]}
         }
     }
 
