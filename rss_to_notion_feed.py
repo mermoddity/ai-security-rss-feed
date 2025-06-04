@@ -126,7 +126,7 @@ def fetch_rss_and_post(feed_url, source_name, filters, existing_urls): # Added '
     skipped_entries_duplicate = 0
     skipped_entries_filter = 0
     
-    for entry in feed.entries[:100]:  # Increased from 5 to 10 to get more content
+    for entry in feed.entries[:10]:  # Increased from 5 to 10 to get more content
         url = entry.get("link", "")
 
         # Keyword filtering logic
