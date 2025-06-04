@@ -24,8 +24,8 @@ def get_existing_entries():
     start_cursor = None
     
     while has_more:
+        # database_id is now part of the URL, not the query_data body
         query_data = {
-            "database_id": NOTION_DATABASE_ID,
             "filter": {
                 "property": "URL",
                 "url": {
@@ -39,7 +39,7 @@ def get_existing_entries():
             query_data["start_cursor"] = start_cursor
             
         response = requests.post(
-            "https://api.notion.com/v1/databases/query",
+            f"https://api.notion.com/v1/databases/{NOTION_DATABASE_ID}/query", # Corrected URL
             headers=headers,
             json=query_data
         )
@@ -88,8 +88,20 @@ def fetch_rss_and_post(feed_url, source_name, filters, existing_urls): # Added '
     Fetch RSS feed and post entries that don't already exist in the Notion database.
     """
     feed = feedparser.parse(feed_url)
+
+    # Check for HTTP errors or other parsing issues
+    if hasattr(feed, 'status') and feed.status == 404:
+        print(f"Error: Feed URL {feed_url} returned HTTP 404 Not Found. Skipping this feed.")
+        return # Skip processing this feed
+    elif feed.bozo:
+        # bozo is 1 if the feed is ill-formed (e.g., XML errors, network issues other than 404)
+        # feed.bozo_exception often contains the specific error
+        bozo_reason = str(feed.get('bozo_exception', 'Unknown parsing error'))
+        print(f"Warning: Feed {feed_url} may be ill-formed or inaccessible. Reason: {bozo_reason}. Attempting to process...")
+
     new_entries = 0
-    skipped_entries = 0
+    skipped_entries_duplicate = 0
+    skipped_entries_filter = 0
     
     for entry in feed.entries[:10]:  # Increased from 5 to 10 to get more content
         url = entry.get("link", "")
@@ -108,7 +120,7 @@ def fetch_rss_and_post(feed_url, source_name, filters, existing_urls): # Added '
                     match_found = True
                     break
             if not match_found:
-                skipped_entries += 1
+                skipped_entries_filter += 1
                 continue # Skip this entry if no keyword matches
 
         if url and url not in existing_urls:
@@ -116,9 +128,9 @@ def fetch_rss_and_post(feed_url, source_name, filters, existing_urls): # Added '
             existing_urls.add(url)  # Add to set to prevent duplicates within the same run
             new_entries += 1
         else:
-            skipped_entries += 1
+            skipped_entries_duplicate += 1
     
-    print(f"{source_name}: {new_entries} new entries added, {skipped_entries} duplicates skipped")
+    print(f"{source_name}: {new_entries} new entries added, {skipped_entries_duplicate} duplicates skipped, {skipped_entries_filter} filtered out")
 
 if __name__ == "__main__":
     # Get all existing entries once at the beginning
