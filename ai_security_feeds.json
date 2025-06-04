@@ -6,67 +6,83 @@
   },
   {
     "name": "AI Snake Oil",
-    "url": "https://aisnakeoil.substack.com/feed",
-    "filters": []
+    "url": "https://www.aisnakeoil.com/feed",
+    "filters": [
+      "security",
+      "safety",
+      "alignment",
+      "red team",
+      "attack"
+    ]
   },
   {
     "name": "Anthropic News",
-    "url": "https://www.anthropic.com/news/rss",
+    "url": "https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic.xml",
     "filters": [
+      "security",
       "safety",
+      "alignment",
       "red team",
-      "alignment"
+      "attack"
     ]
   },
   {
     "name": "OpenAI Blog",
     "url": "https://openai.com/blog/rss.xml",
     "filters": [
+      "security",
       "safety",
-      "incident",
+      "alignment",
       "red team",
-      "prompt injection"
+      "attack"
     ]
   },
   {
     "name": "DeepMind Blog",
     "url": "https://www.deepmind.com/blog/rss.xml",
     "filters": [
-      "safety",
       "security",
-      "robustness",
-      "alignment"
+      "safety",
+      "alignment",
+      "red team",
+      "attack"
     ]
   },
   {
     "name": "Invariant Labs (no RSS)",
     "url": "https://invariant.ai/blog",
-    "filters": [
-      "jailbreak",
-      "exploit",
-      "prompt injection",
-      "agent flow"
-    ],
+    "filters": [],
     "note": "No native RSS \u2013 requires scraping or custom ingestion"
   },
   {
     "name": "NIST ITL News",
-    "url": "https://www.nist.gov/itl/news-events/news/feed",
+    "url": "https://www.nist.gov/news-events/information%20technology/rss.xml",
     "filters": [
-      "AI RMF",
-      "AI risk",
-      "AI security",
-      "genai"
+      "AI",
+      "genai",
+      "LLM"
     ]
   },
   {
-    "name": "ISO/IEC JTC 1/SC 42",
-    "url": "https://www.iso.org/committee/6794475.html",
+    "name": "Ollama Feed",
+    "url": "https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_ollama.xml",
     "filters": [
-      "42001",
-      "AI standard",
-      "SC 42"
-    ],
-    "note": "No RSS \u2013 consider checking manually or subscribing to alerts"
+      "security",
+      "safety",
+      "alignment",
+      "red team",
+      "attack"
+    ]
+  },
+  {
+    "name": "OpenAI Research",
+    "url": "https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_openai_research.xml",
+    "filters": [
+      "security",
+      "safety",
+      "alignment",
+      "red team",
+      "attack"
+    ]
   }
 ]
