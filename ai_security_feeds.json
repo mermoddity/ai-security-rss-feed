@@ -1,0 +1,72 @@
+[
+  {
+    "name": "Arxiv - LLM Security",
+    "url": "https://export.arxiv.org/api/query?search_query=all:(llm+security+OR+prompt+injection+OR+model+extraction)&start=0&max_results=10&sortBy=lastUpdatedDate&sortOrder=descending",
+    "filters": []
+  },
+  {
+    "name": "AI Snake Oil",
+    "url": "https://aisnakeoil.substack.com/feed",
+    "filters": []
+  },
+  {
+    "name": "Anthropic News",
+    "url": "https://www.anthropic.com/news/rss",
+    "filters": [
+      "safety",
+      "red team",
+      "alignment"
+    ]
+  },
+  {
+    "name": "OpenAI Blog",
+    "url": "https://openai.com/blog/rss.xml",
+    "filters": [
+      "safety",
+      "incident",
+      "red team",
+      "prompt injection"
+    ]
+  },
+  {
+    "name": "DeepMind Blog",
+    "url": "https://www.deepmind.com/blog/rss.xml",
+    "filters": [
+      "safety",
+      "security",
+      "robustness",
+      "alignment"
+    ]
+  },
+  {
+    "name": "Invariant Labs (no RSS)",
+    "url": "https://invariant.ai/blog",
+    "filters": [
+      "jailbreak",
+      "exploit",
+      "prompt injection",
+      "agent flow"
+    ],
+    "note": "No native RSS \u2013 requires scraping or custom ingestion"
+  },
+  {
+    "name": "NIST ITL News",
+    "url": "https://www.nist.gov/itl/news-events/news/feed",
+    "filters": [
+      "AI RMF",
+      "AI risk",
+      "AI security",
+      "genai"
+    ]
+  },
+  {
+    "name": "ISO/IEC JTC 1/SC 42",
+    "url": "https://www.iso.org/committee/6794475.html",
+    "filters": [
+      "42001",
+      "AI standard",
+      "SC 42"
+    ],
+    "note": "No RSS \u2013 consider checking manually or subscribing to alerts"
+  }
+]

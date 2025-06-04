@@ -2,6 +2,7 @@ import feedparser
 import requests
 import datetime
 import os
+import json # Added json import
 from email.utils import parsedate_to_datetime
 
 NOTION_TOKEN = os.environ["NOTION_TOKEN"]
@@ -82,7 +83,7 @@ def post_to_notion(entry, source_name):
     res = requests.post("https://api.notion.com/v1/pages", headers=headers, json=data)
     print(f"{source_name} - {title}: {res.status_code}")
 
-def fetch_rss_and_post(feed_url, source_name, existing_urls):
+def fetch_rss_and_post(feed_url, source_name, filters, existing_urls): # Added 'filters' parameter
     """
     Fetch RSS feed and post entries that don't already exist in the Notion database.
     """
@@ -92,6 +93,24 @@ def fetch_rss_and_post(feed_url, source_name, existing_urls):
     
     for entry in feed.entries[:10]:  # Increased from 5 to 10 to get more content
         url = entry.get("link", "")
+
+        # Keyword filtering logic
+        if filters: # Only filter if filters are provided
+            title_content = entry.get("title", "").lower()
+            summary_content = entry.get("summary", "").lower() # feedparser uses 'summary' for <description>
+            # Some feeds might use 'content' instead of 'summary'
+            content_details = "".join(c.value for c in entry.get("content", [])) if entry.get("content") else ""
+            content_details = content_details.lower()
+
+            match_found = False
+            for keyword in filters:
+                if keyword.lower() in title_content or keyword.lower() in summary_content or keyword.lower() in content_details:
+                    match_found = True
+                    break
+            if not match_found:
+                skipped_entries += 1
+                continue # Skip this entry if no keyword matches
+
         if url and url not in existing_urls:
             post_to_notion(entry, source_name)
             existing_urls.add(url)  # Add to set to prevent duplicates within the same run
@@ -106,20 +125,28 @@ if __name__ == "__main__":
     print("Fetching existing entries from Notion database...")
     existing_urls = get_existing_entries()
     print(f"Found {len(existing_urls)} existing entries")
-    
-    # List of RSS feeds to process
-    rss_feeds = [
-        ("https://export.arxiv.org/api/query?search_query=all:llm+security&start=0&max_results=10&sortBy=lastUpdatedDate&sortOrder=descending", "Arxiv - LLM Security"),
-        ("https://feeds.feedburner.com/TheHackersNews", "The Hacker News"),
-        ("https://www.darkreading.com/rss.xml", "DarkReading"),
-        ("https://www.aisnakeoil.com/feed", "AI Snake Oil"),
-        ("https://attack.mitre.org/rss/", "MITRE ATT&CK / ATLAS"),
-        ("https://openai.com/blog/rss.xml", "OpenAI Blog"),
-        ("https://rsshub.app/anthropic/news", "Anthropic News"),
-        ("https://www.deepmind.com/blog/rss.xml", "Google DeepMind")
-    ]
-    
-    # Process each feed
-    for feed_url, source_name in rss_feeds:
-        print(f"Processing {source_name}...")
-        fetch_rss_and_post(feed_url, source_name, existing_urls)
+
+    # Load RSS feed configurations from JSON file
+    feeds_config_path = os.path.join(os.path.dirname(__file__), 'ai_security_feeds.json')
+    try:
+        with open(feeds_config_path, 'r') as f:
+            rss_feeds_config = json.load(f)
+    except FileNotFoundError:
+        print(f"Error: 'ai_security_feeds.json' not found at {feeds_config_path}")
+        exit(1)
+    except json.JSONDecodeError:
+        print(f"Error: Could not decode 'ai_security_feeds.json'. Make sure it's valid JSON.")
+        exit(1)
+
+    # Process each feed from the configuration
+    for feed_info in rss_feeds_config:
+        source_name = feed_info.get("name")
+        feed_url = feed_info.get("url")
+        filters = feed_info.get("filters", []) # Default to empty list if not present
+
+        if not feed_url: # Skip if no URL is provided (e.g. for manual feeds)
+            print(f"Skipping {source_name} as no URL is provided.")
+            continue
+
+        print(f"Processing {source_name} with URL {feed_url}...")
+        fetch_rss_and_post(feed_url, source_name, filters, existing_urls)
