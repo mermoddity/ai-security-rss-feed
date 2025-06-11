@@ -89,7 +89,10 @@
     "name": "Embrace The Red Blog",
     "url": "https://embracethered.com/blog/index.xml",
     "filters": []
+  },
+  {
+    "name": "Kubiosec Blog",
+    "url": "https://www.kubiosec.tech/blog-feed.xml",
+    "filters": []
   }
-
-  
 ]
